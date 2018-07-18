@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>已连接到Facebook</title>
+</head>
+
+<body>
+  <h3>已连接到Facebook</h3>
+  <div class="formInfo">
+    <p>你已连接到Facebook，点击连接按钮连接到Facebook账户</p>
+  </div>
+  <h3>Facebook好友: <span th:text="${friendsNum}"></span></h3>
+  <ul>
+    <li th:each="friend : ${friends}">
+      <img th:src="'http://graph.facebook.com/' + ${friend.id} + '/picture'" align="middle" />
+      <span th:text="${friend.name}">name</span>
+    </li>
+  </ul>
+  <h3>邮箱信息: <span th:text="${email}"></span></h3>
+</body>
+
+</html>

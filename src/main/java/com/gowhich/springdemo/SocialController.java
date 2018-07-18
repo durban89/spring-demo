@@ -1,78 +1,58 @@
 package com.gowhich.springdemo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.springframework.social.connect.Connection;
+import org.springframework.social.connect.ConnectionRepository;
 import org.springframework.social.facebook.api.Facebook;
-import org.springframework.social.facebook.api.impl.FacebookTemplate;
-import org.springframework.social.facebook.connect.FacebookConnectionFactory;
-import org.springframework.social.oauth2.OAuth2Operations;
+import org.springframework.social.facebook.api.Reference;
+import org.springframework.social.facebook.api.User;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import javax.swing.*;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
+
+import javax.inject.Inject;
 
 @Controller
 public class SocialController {
-    @GetMapping("social/facebook")
-    public void facebook() {
-        String appId = "xxx"; //promptForInput("输入App ID:");
-        String appSecret = "xxx"; // promptForInput("输入App Secret:");
-        String appToken = fetchApplicationAccessToken(appId, appSecret);
-        AppDetail appDetail = fetchApplicationData(appId, appToken);
-        System.out.println("\n 应用详情");
-        System.out.println("=====================");
-        System.out.println("ID:" + appDetail.getId());
-        System.out.println("Name:" + appDetail.getName());
-        System.out.println("Namespace: "+appDetail.getNamespace());
-        System.out.println("Contact Email:"+appDetail.getContactEmail());
-        System.out.println("Website Url:"+appDetail.getWebsiteUrl());
+    private Facebook facebook;
+    private ConnectionRepository connectionRepository;
+
+    @Inject
+    public SocialController(Facebook facebook, ConnectionRepository connectionRepository) {
+        this.facebook = facebook;
+        this.connectionRepository = connectionRepository;
     }
 
-    private static AppDetail fetchApplicationData(String appId, String appToken) {
-        Facebook facebook = new FacebookTemplate(appToken);
-        return facebook.restOperations().getForObject(
-                "https://graph.facebook.com/{appId}?fields=name,namespace,contact_email,website_url",
-                AppDetail.class,
-                appId);
+    @RequestMapping(value = "/connect/facebook", method = RequestMethod.GET)
+    public ModelAndView connectFacebook(Model model) {
+        ModelAndView mv = new ModelAndView("connect/connectFacebook");
+        mv.addObject("email", "ddd@walkerfree.com");
+        return mv;
     }
 
-    private static String fetchApplicationAccessToken(String appId, String appSecret) {
-        OAuth2Operations oauth = new FacebookConnectionFactory(appId, appSecret).getOAuthOperations();
-        return oauth.authenticateClient().getAccessToken();
-    }
+    @RequestMapping(value = "/connected/facebook", method = RequestMethod.GET)
+    public String connectedFacebook(Model model) {
+        Connection<Facebook> connection = this.connectionRepository.findPrimaryConnection(Facebook.class);
 
-    private static String promptForInput(String promptText) {
-        return JOptionPane.showInputDialog(promptText + " ");
-    }
-
-    private static final class AppDetail {
-        private long id;
-        private String name;
-        private String namespace;
-
-        @JsonProperty("contact_email")
-        private String contactEmail;
-
-        @JsonProperty("website_url")
-        private String websiteUrl;
-
-        public long getId() {
-            return id;
+        if (connection == null) {
+            return "redirect:/connect/facebook";
         }
 
-        public String getName() {
-            return name;
-        }
+        List<Reference> friends = facebook.friendOperations().getFriends();
 
-        public String getNamespace() {
-            return namespace;
-        }
+        String[] fields = { "id", "email", "first_name", "last_name" };
+        User userProfile = facebook.fetchObject("me", User.class, fields);
 
-        public String getContactEmail() {
-            return contactEmail;
-        }
-
-        public String getWebsiteUrl() {
-            return websiteUrl;
-        }
+        System.out.println(friends.size());
+        model.addAttribute("friends", friends);
+        model.addAttribute("friendsNum", friends.size());
+        model.addAttribute("email", userProfile.getEmail());
+        return "connect/connectedFacebook";
     }
 
 }

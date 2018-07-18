@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>连接到Facebook</title>
+</head>
+
+<body>
+  <h3>连接到Facebook</h3>
+  <form th:action="@{/signin/facebook}" method="POST">
+    <input type="hidden" name="scope" value="email,user_friends" />
+    <input type="hidden" name="redirect_uri" value="http://localhost:8080/connected/facebook" />
+    <div class="formInfo">
+      <p>你还没有连接到Facebook，点击连接按钮连接到Facebook账户</p>
+    </div>
+    <p>
+      <button type="submit">连接到Facebook</button>
+    </p>
+  </form>
+</body>
+
+</html>
